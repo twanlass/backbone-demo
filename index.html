@@ -1,0 +1,193 @@
+<html>
+<head>
+	<title>Backbone Playground</title>
+	<link rel="stylesheet" type="text/css" href="css/core.css" />
+	<script src="js/jquery.js"></script>
+	<script src="js/underscore.js"></script>
+	<script src="js/backbone.js"></script>
+	<script src="js/mustache.js"></script>
+	<script>
+	$(document).ready(function() {
+
+		var Game = Backbone.Model.extend({
+			defaults: function(){
+				return {
+			        title: 'Title...',
+			        platform: 'Platform...',
+			        release: 'Release Date...',
+			        active: false,
+				};
+			},
+
+			active: function() {
+				//this.set(active: true);
+				console.log('heyoy');
+			}
+		});
+		
+		var GameLib = Backbone.Collection.extend({});
+		
+		// UI Bar - contains controls and features
+		////////////////////////
+		var UIBar = Backbone.View.extend({
+			template: $('#UIBar_tpl').html(),
+
+			initialize: function(){
+				this.render();
+			},
+
+			events: {
+				"click #add_game" : "getInput",
+				"keypress"  : "getInput",
+			},
+
+			getInput: function(e) {
+				titleInput = $(this.el).find(':input');
+				if(e.keyCode == 13 || e.type == 'click') {
+					if($(titleInput).val()) {
+						this.addGame($(titleInput).val());
+						$(titleInput).val('');
+					}
+				}
+			},
+
+			addGame: function(gameTitle) {
+				game = new Game({title: gameTitle});
+				this.collection.add(game);
+			},
+
+			render: function() {
+				$(this.el).html(this.template);
+			}	
+		});
+		
+		// Detail pane for each game. Pass a model to the render() to init
+		////////////////////////
+		var DetailPane = Backbone.View.extend({
+			template: $('#DetailPane_tpl').html(),
+
+			initialize: function() {
+				_.bindAll(this, 'render');
+				this.options.eventBot.bind('viewGameDetail', this.render);
+				this.collection.bind('add', this.render);
+				this.render(this.collection.at(0)); // render out the first item in our collection on start
+			},
+
+			render: function(model) {
+				$(this.el).html(Mustache.render(this.template, model.toJSON()));
+				return this;
+			}
+		});
+
+		// Simple list view of our games
+		////////////////////////
+		var GameList = Backbone.View.extend({
+			template: $('#GameList_tpl').html(),
+
+			initialize: function(options){
+				_.bindAll(this, 'render', 'addAll', 'addOne');
+				this.collection.bind('add', this.addOne);
+				this.render();
+			},
+
+			render: function() {
+				$(this.el).html(this.template);
+				this.addAll();
+				return this;
+			},
+
+			addAll: function() {
+				this.collection.each(this.addOne);
+			},
+
+			addOne: function(model) {
+				view = new GameListItem({model: model, eventBot: this.options.eventBot});
+				view.render();
+				$(this.el).children('ul').append(view.el);
+				model.bind('remove', view.remove);
+			}
+		});
+		
+		// List item view - each game, rendered by a view created on the fly.
+		// It's then passed up to our master list view for final render
+		////////////////////////
+		var GameListItem = Backbone.View.extend({
+			template: $('#GameListItem_tpl').html(),
+			tagName: 'li',
+
+			initialize: function(options) {
+				_.bindAll(this, 'render', 'remove', 'renderDetail');
+				this.model.bind('change', this.render);
+				this.model.bind('destroy', this.remove);
+				this.eventBot = this.options.eventBot;
+			},	
+
+			events: {
+				"click a.remove" : "remove",
+				"click .view" : "renderDetail",
+			},
+
+			render: function() {
+				$(this.el).html(Mustache.render(this.template, this.model.toJSON()));
+				return this;
+			},
+
+			renderDetail: function() {
+				this.eventBot.trigger('viewGameDetail', this.model);
+			},
+
+			remove: function() {
+				$(this.el).remove();
+				this.model.collection.remove(this.model); // hack to remove from collection - need to properly destory from server then remove on true
+			}
+
+		});
+
+		$(function() {
+			// building a default collection. We should have something by default for first view. Replace w/ REST .fetch() later
+			var gameLib = new GameLib([
+				{title: 'Zelda', platform: 'N64', release: '1999', id: 1000},
+				{title: 'Halo', platform: 'Xbox', release: '2002', id: 1001},
+				{title: 'Uncharted', platform: 'PS3', release: '2007', id: 1002}
+			]);
+			// init our list view and UIBar (input view). All views render() on init
+			var eventBot = _.extend({}, Backbone.Events); // custom event object - let's us trigger custome events and avoid view coupling 
+			new GameList({collection: gameLib, el: $('#view_UIList'), eventBot: eventBot});
+			new UIBar({collection: gameLib, el: $('#view_UIBar')});
+			new DetailPane({collection: gameLib, el: $('#view_UIDetailPane'), eventBot: eventBot});
+		});		
+	});
+	</script>
+
+	<script id="UIBar_tpl" type="text/x-template">
+		<input type="text"><button id="add_game">[+]</button>
+	</script>
+
+	<script id="DetailPane_tpl" type="text/x-template">
+		<h2 class="detail_header">{{title}}</h2>
+			<div class="details">
+				<label>Platform</label>
+				<input type="text" value="{{platform}}">
+				<label>Release Date</label>
+				<input type="text" value="{{release}}">
+			</div>
+	</script>
+
+	<script id="GameList_tpl" type="text/x-template">
+		<h2>Game Library</h2>
+		<ul id="game_list"></ul>
+	</script>
+	
+	<script id="GameListItem_tpl" type="text/x-template">
+		<div class="item view"><a href="#" class="remove">[X] </a>{{title}}</div>
+	</script>
+
+</head>
+<body>
+<div id="main">
+	<div id="view_UIBar"></div>	
+	<div id="view_UIList"></div>
+	<div id="view_UIDetailPane"></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,83 @@
+body {
+	font-family: helvetica;
+}
+
+ul {
+	padding: 0px;
+}
+
+li {
+    border-bottom: 1px solid #B1B1B1;
+    list-style: none outside none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+li:first-child {
+	border-top: 1px solid #B1B1B1;
+}
+
+	li:hover {
+		background-color: #fff;
+		cursor: pointer;
+	}
+
+h2 {
+	margin: 0 0 15px;
+}
+
+#main {
+    background: none repeat scroll 0 0 #EEEEEE;
+    border: 1px solid #B1B1B1;
+    border-radius: 4px 4px 4px 4px;
+    box-shadow: 0 3px 0 0 rgba(0, 0, 0, 0.2);
+    margin: 45px auto;
+    overflow: hidden;
+    width: 960px;
+}
+
+#view_UIBar {
+    border-bottom: 1px solid #b1b1b1;
+    padding: 15px;
+    width: 100%;
+}
+
+
+
+#view_UIList {
+    border-right: 1px solid #b1b1b1;
+    float: left;
+    padding: 15px 0;
+    width: 220px;
+}
+	
+	#view_UIList h2 {
+		padding: 0 15px
+	}
+
+	.remove {
+		padding: 0 7px 0 0;
+	}
+
+	.item {
+		padding: 10px 15px;
+	}
+
+
+#view_UIDetailPane {
+    float: left;
+    padding: 15px;
+}
+
+	#view_UIDetailPane input {
+	    display: block;
+	    margin: 0 0 15px;
+	}
+
+	#view_UIDetailPane label {
+		color: #2D2D2D;
+		font-size: 12px;
+	}
+
+
