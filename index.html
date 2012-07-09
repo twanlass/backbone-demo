@@ -123,7 +123,7 @@
 			},	
 
 			events: {
-				"click a.remove" : "remove",
+				"click .remove" : "remove",
 				"click .view" : "renderDetail",
 			},
 
@@ -179,7 +179,7 @@
 	</script>
 	
 	<script id="GameListItem_tpl" type="text/x-template">
-		<div class="item view"><a href="#" class="remove">[X] </a>{{title}}</div>
+		<div class="item view"><div class="title">{{title}}</div><div class="ico remove"></div></div>
 	</script>
 
 </head>
