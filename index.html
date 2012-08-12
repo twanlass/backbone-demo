@@ -15,17 +15,21 @@
 			        title: 'Title...',
 			        platform: 'Platform...',
 			        release: 'Release Date...',
-			        active: false,
 				};
 			},
-
-			active: function() {
-				//this.set(active: true);
-				console.log('heyoy');
-			}
 		});
 		
-		var GameLib = Backbone.Collection.extend({});
+		var GameLib = Backbone.Collection.extend({
+			
+			initialize: function() {
+				_.bindAll(this, 'getPrev');
+			},
+
+			getPrev: function(model) {
+				var prev = this.get(model.get('id')-1);
+				return prev ? prev : false;
+			}
+		});
 		
 		// UI Bar - contains controls and features
 		////////////////////////
@@ -34,21 +38,31 @@
 
 			initialize: function(){
 				this.render();
+				this.setInput();
 			},
 
 			events: {
-				"click #add_game" : "getInput",
 				"keypress"  : "getInput",
+				"click input" : "clearInput",
+				"blur input" : "setInput",
+			},
+
+			setInput: function() {
+				newGameInput = $(this.el).find(':input');
+				newGameInput.val(newGameInput.attr('data-initial'));
 			},
 
 			getInput: function(e) {
-				titleInput = $(this.el).find(':input');
-				if(e.keyCode == 13 || e.type == 'click') {
-					if($(titleInput).val()) {
-						this.addGame($(titleInput).val());
-						$(titleInput).val('');
+				if(e.keyCode == 13) {
+					if($(newGameInput).val()) {
+						this.addGame($(newGameInput).val());
+						this.clearInput();
 					}
 				}
+			},
+
+			clearInput: function() {
+				newGameInput.val('');
 			},
 
 			addGame: function(gameTitle) {
@@ -65,16 +79,58 @@
 		////////////////////////
 		var DetailPane = Backbone.View.extend({
 			template: $('#DetailPane_tpl').html(),
+			curId:  null,
+			curModel: null,
 
 			initialize: function() {
-				_.bindAll(this, 'render');
+				_.bindAll(this, 'render', 'renderPrev');
 				this.options.eventBot.bind('viewGameDetail', this.render);
-				this.collection.bind('add', this.render);
+				this.collection.bind('add', this.render); // show new itmes in detail on add
+				this.collection.bind('remove', this.renderPrev); // if we remove an item and it's visible in detail, remove that too
 				this.render(this.collection.at(0)); // render out the first item in our collection on start
+			},
+
+			events: {
+				"blur input" : "save",
+				"keypress input"  : "getInput",
+				"click input" : "select",
+			},
+
+			save: function(e) {
+				var property = e.currentTarget.id;
+				var value = e.currentTarget.value;
+			 	var map = {};
+			 	map[property] = value;
+				this.curModel.set(map);
+			},
+
+			getInput: function(e) {
+				if(e.keyCode == 13) {
+					this.save(e);
+					this.nextOnEnter(e);
+				}
+			},
+
+			nextOnEnter: function(e) {
+				$(e.currentTarget).blur();
+				$(e.currentTarget).next().next(':input').select();
+			},
+
+			select: function(e) {
+				$(e.currentTarget).select();
+			},
+
+			renderPrev: function(model) {
+				if(this.curId == model.get('id')){ // are we removing the game we're currently displaying in the detail pane? 
+					var modelToRender = this.collection.getPrev(model); // get the next model in our collection
+					modelToRender ? this.render(modelToRender) : $(this.el).html(''); // if none, wipe the display
+				}
 			},
 
 			render: function(model) {
 				$(this.el).html(Mustache.render(this.template, model.toJSON()));
+				this.curId = model.get('id');
+				this.curModel = model;
 				return this;
 			}
 		});
@@ -116,14 +172,14 @@
 			tagName: 'li',
 
 			initialize: function(options) {
-				_.bindAll(this, 'render', 'remove', 'renderDetail');
+				_.bindAll(this, 'render', 'remove', 'delete', 'renderDetail');
 				this.model.bind('change', this.render);
 				this.model.bind('destroy', this.remove);
 				this.eventBot = this.options.eventBot;
 			},	
 
 			events: {
-				"click .remove" : "remove",
+				"click .remove" : "delete",
 				"click .view" : "renderDetail",
 			},
 
@@ -132,15 +188,21 @@
 				return this;
 			},
 
-			renderDetail: function() {
+			renderDetail: function(e) {
+				if ($(e.target).hasClass('remove')) return false; // delegated event workaround. Need to remove class name dependency 
+				$('li').removeClass('active');
+				$(e.currentTarget).parent('li').addClass('active');
 				this.eventBot.trigger('viewGameDetail', this.model);
 			},
 
 			remove: function() {
-				$(this.el).remove();
-				this.model.collection.remove(this.model); // hack to remove from collection - need to properly destory from server then remove on true
-			}
+				$(this.el).fadeOut(250);
+			},
 
+			delete: function() {
+				//this.model.destroy();
+				this.model.collection.remove(this.model); // hack to remove from collection - need to properly destory using this.model.destroy()
+			}
 		});
 
 		$(function() {
@@ -148,10 +210,13 @@
 			var gameLib = new GameLib([
 				{title: 'Zelda', platform: 'N64', release: '1999', id: 1000},
 				{title: 'Halo', platform: 'Xbox', release: '2002', id: 1001},
-				{title: 'Uncharted', platform: 'PS3', release: '2007', id: 1002}
+				{title: 'Uncharted', platform: 'PS3', release: '2007', id: 1002},
+				{title: 'Metal Gear Solid', platform: 'PS2', release: '2001', id: 1003},
+				{title: 'Left 4 Dead', platform: 'Xbox 360', release: '2009', id: 1004},
+				{title: 'Pacman', platform: 'Atari 2600', release: '1984', id: 1005}
 			]);
 			// init our list view and UIBar (input view). All views render() on init
-			var eventBot = _.extend({}, Backbone.Events); // custom event object - let's us trigger custome events and avoid view coupling 
+			var eventBot = _.extend({}, Backbone.Events); // custom event object - let's us trigger custom events and avoid view coupling 
 			new GameList({collection: gameLib, el: $('#view_UIList'), eventBot: eventBot});
 			new UIBar({collection: gameLib, el: $('#view_UIBar')});
 			new DetailPane({collection: gameLib, el: $('#view_UIDetailPane'), eventBot: eventBot});
@@ -160,21 +225,23 @@
 	</script>
 
 	<script id="UIBar_tpl" type="text/x-template">
-		<input type="text"><button id="add_game">[+]</button>
+		<input type="text" class="new_item" data-initial="Add a new item [enter]">
 	</script>
 
 	<script id="DetailPane_tpl" type="text/x-template">
-		<h2 class="detail_header">{{title}}</h2>
-			<div class="details">
-				<label>Platform</label>
-				<input type="text" value="{{platform}}">
-				<label>Release Date</label>
-				<input type="text" value="{{release}}">
-			</div>
+		<div class="details">
+			<label>Title</label>
+			<input type="text" id="title" value="{{title}}">
+			<label>Platform</label>
+			<input type="text" id="platform" value="{{platform}}">
+			<label>Release Date</label>
+			<input type="text" id="release" value="{{release}}">
+		</div>
+		<div class="img_drop"></div>
 	</script>
 
 	<script id="GameList_tpl" type="text/x-template">
-		<h2>Game Library</h2>
+		<h2>Item Library</h2>
 		<ul id="game_list"></ul>
 	</script>
 	
@@ -187,7 +254,7 @@
 <div id="main">
 	<div id="view_UIBar"></div>	
 	<div id="view_UIList"></div>
-	<div id="view_UIDetailPane"></div>
+	<div id="view_UIDetailPane">Placeholder</div>
 </div>
 </body>
 </html>

@@ -7,19 +7,18 @@ ul {
 }
 
 li {
-    border-bottom: 1px solid #B1B1B1;
-    list-style: none outside none;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-shadow: 0 1px 1px #fff;
-    white-space: nowrap;
+	border-bottom: 1px solid #B1B1B1;
+	border-top: 1px solid rgba(255, 255, 255, 0.3);
+	list-style: none outside none;
+	text-shadow: 0 1px 1px #FFFFFF;
+	white-space: nowrap;
 }
 
 li:first-child {
 	border-top: 1px solid #B1B1B1;
 }
 
-	li:hover {
+	li:hover, li.active {
 		background: #7abcff;
 		background: -moz-linear-gradient(top,  #7abcff 0%, #60abf8 44%, #4096ee 100%);
 		background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#7abcff), color-stop(44%,#60abf8), color-stop(100%,#4096ee));
@@ -43,6 +42,59 @@ li:first-child {
 h2 {
 	margin: 0 0 15px;
 }
+
+input{
+	font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+	background-color: transparent;
+/*	-webkit-box-shadow: 0 1px 2px #B1B1B1 inset, 0 2px 0 0 #EEEEEE;
+	   -moz-box-shadow: 0 1px 2px #B1B1B1 inset, 0 2px 0 0 #EEEEEE;
+	        box-shadow: 0 1px 2px #B1B1B1 inset, 0 2px 0 0 #EEEEEE;*/
+	border: 1px solid transparent;
+	-webkit-border-radius: 3px;
+	   -moz-border-radius: 3px;
+	        border-radius: 3px;
+
+	padding: 6px 8px;
+	font-size: 18px;	
+	font-weight: normal;
+	box-sizing: border-box;
+	width: 280px;
+	
+	-moz-box-sizing: content-box;
+	-webkit-box-sizing: content-box;
+	box-sizing: content-box;
+	
+	height: 22px;
+	line-height: 22px;
+	
+	transition: background-color .35s, border-color .35s;
+	-moz-transition: background-color .35s, border-color .35s;
+	-webkit-transition: background-color .35s, border-color .35s; 
+	-o-transition: background-color .35s, border-color .35s;
+}
+	
+	input.new_item {
+		border: 1px solid #b1b1b1;
+		color: #b1b1b1;
+	}
+
+	input:hover {
+		border: 1px solid #b1b1b1;
+	}
+	
+	input:focus {
+		background-color: #f8f8f8;
+		-webkit-box-shadow: 0 1px 2px #B1B1B1 inset, 0 2px 0 0 #EEEEEE;
+		   -moz-box-shadow: 0 1px 2px #B1B1B1 inset, 0 2px 0 0 #EEEEEE;
+		        box-shadow: 0 1px 2px #B1B1B1 inset, 0 2px 0 0 #EEEEEE;
+		border: 1px solid #2C5CB7;
+		color: #000;
+		outline: none; 
+		transition: background-color .35s, border-color .35s;
+		-moz-transition: background-color .35s, border-color .35s;
+		-webkit-transition: background-color .35s, border-color .35s; 
+		-o-transition: background-color .35s, border-color .35s;
+	}
 
 #main {
     background-color: #fafafa;
@@ -72,6 +124,7 @@ h2 {
 
     border-right: 1px solid #b1b1b1;
     float: left;
+    min-height: 245px;
     padding: 15px 0;
     width: 220px;
 }
@@ -83,6 +136,8 @@ h2 {
 	.title {
 	    float: left;
 	    width: 160px;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	.ico {
@@ -116,6 +171,19 @@ h2 {
 	#view_UIDetailPane label {
 		color: #2D2D2D;
 		font-size: 12px;
+	}
+
+	.details {
+		float: left;
+		margin-right: 36px;
+	}
+
+	.img_drop {
+		border-left: 1px solid #B1B1B1;
+		display: block;
+		float: left;
+		min-height: 284px;
+		width: 370px;
 	}
 
 
